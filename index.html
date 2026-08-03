@@ -147,13 +147,21 @@
   }
   .hg-delta { color: var(--up); font-weight: 700; font-variant-numeric: tabular-nums; }
   .hg-empty { color: var(--dim); font-size: 12px; padding: 8px 0; }
+  .side-sum {
+    display: flex; align-items: center; justify-content: space-between;
+    list-style: none; cursor: default;
+  }
+  .side-sum::-webkit-details-marker { display: none; }
+  .acc-arrow { display: none; color: var(--steel); font-size: 12px; transition: transform .15s ease; }
   @media (max-width: 980px) {
     .layout { grid-template-columns: 1fr; }
-    .side { /* таблица — первой, гриндеры после неё */
-      position: static;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    .side { /* свернутые аккордеоны гриндеров — над таблицей, не съедают экран */
+      position: static; order: -1;
+      display: grid; grid-template-columns: 1fr; gap: 8px;
     }
+    .side-sum { cursor: pointer; }
+    .acc-arrow { display: inline; }
+    .side-card[open] .acc-arrow { transform: rotate(180deg); }
   }
 
   /* ── topbar ─────────────────────────────────────────── */
@@ -223,8 +231,8 @@
     animation: ember-drift 16s ease-in-out infinite alternate;
   }
   @keyframes ember-drift {
-    from { transform: translateY(4px); }
-    to { transform: translateY(-8px); }
+    from { transform: translate(-7px, 4px); }
+    to { transform: translate(7px, -10px); }
   }
   .hero-title {
     font: 600 clamp(44px, 9vw, 92px)/1 var(--display);
@@ -234,8 +242,23 @@
   .hero-title .fall {
     background: linear-gradient(180deg, #ff8a66 0%, var(--ember-hi) 45%, var(--ember-deep) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: fall-glow 3.6s ease-in-out infinite alternate;
+  }
+  @keyframes fall-glow {
+    from { filter: drop-shadow(0 0 10px rgba(224, 90, 65, .16)); }
+    to { filter: drop-shadow(0 0 30px rgba(224, 90, 65, .48)); }
   }
   .hero-sub { color: var(--steel); margin-top: 12px; font-size: 14px; letter-spacing: .02em; }
+  .hero-epigraph {
+    position: relative; max-width: 600px; margin: 20px auto 0;
+    padding-top: 16px; color: var(--dim);
+    font-size: 13px; line-height: 1.8; letter-spacing: .015em;
+  }
+  .hero-epigraph::before { /* тонкая линия-датум над эпиграфом */
+    content: ""; position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%); width: 64px; height: 1px;
+    background: var(--horizon); opacity: .8;
+  }
   .hero-cta {
     display: inline-block; margin-top: 20px; padding: 11px 24px;
     font: 600 13px/1 var(--display); text-transform: uppercase; letter-spacing: .14em;
@@ -329,6 +352,17 @@
   .fact-delta--gold { color: var(--gold); }
   .fact-delta--steel { color: var(--ink); }
   .fact-of { font: 500 13px var(--display); color: var(--dim); text-transform: lowercase; }
+  .fact-react { display: flex; gap: 2px; margin-top: 8px; }
+  .re-btn {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font-size: 13px; line-height: 1; padding: 3px 4px; border-radius: 4px;
+    opacity: .38; filter: grayscale(35%);
+    transition: opacity .12s ease, transform .12s ease, background-color .12s ease;
+  }
+  .re-btn:hover { opacity: 1; filter: none; transform: scale(1.18); background: rgba(255, 255, 255, .05); }
+  .re-btn:active { transform: scale(1.32); }
+  .re-btn.on { opacity: 1; filter: none; }
+  .re-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
   @media (max-width: 1023px) {
     .digest-track {
       overflow-x: auto; scroll-snap-type: x proximity;
@@ -589,6 +623,47 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 
+  /* ── feedback popup ─────────────────────────────────── */
+  .fb-overlay {
+    position: fixed; inset: 0; z-index: 60; display: flex;
+    align-items: center; justify-content: center; padding: 16px;
+    background: rgba(5, 7, 10, .72); backdrop-filter: blur(3px);
+  }
+  .fb-overlay[hidden] { display: none; }
+  .fb-modal {
+    position: relative; width: min(440px, 100%);
+    background: linear-gradient(180deg, #151b24, #10151c);
+    border: 1px solid var(--line); border-top: 2px solid var(--ember);
+    border-radius: 10px; padding: 20px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .5);
+  }
+  .fb-title {
+    font: 600 16px/1.2 var(--display); text-transform: uppercase;
+    letter-spacing: .08em; margin: 0 0 4px; color: var(--ink);
+  }
+  .fb-hint { color: var(--dim); font-size: 12px; margin: 0 0 12px; }
+  .fb-modal textarea {
+    width: 100%; resize: vertical; min-height: 90px; box-sizing: border-box;
+    background: #0c1016; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 10px 12px; font: 400 14px/1.5 var(--body);
+  }
+  .fb-modal textarea:focus-visible { outline: 2px solid var(--ring); }
+  .fb-send {
+    margin-top: 12px; width: 100%;
+    background: var(--ember-deep); border: 1px solid #a03325; border-radius: 6px;
+    color: #fff; padding: 11px; font: 600 13px var(--body);
+    letter-spacing: .04em; cursor: pointer; transition: background-color .12s ease;
+  }
+  .fb-send:hover { background: #a03325; }
+  .fb-close {
+    position: absolute; top: 8px; right: 8px;
+    appearance: none; border: 0; background: transparent; color: var(--steel);
+    font-size: 20px; line-height: 1; padding: 6px 9px; cursor: pointer; border-radius: 4px;
+  }
+  .fb-close:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
+  .fb-done { color: var(--up); font-size: 13px; margin: 10px 0 0; text-align: center; }
+
   /* ── narrow screens ─────────────────────────────────── */
   @media (min-width: 1024px) {
     .hero-cta { display: none; } /* на десктопе таблица и так рядом */
@@ -607,6 +682,7 @@
     .hero { padding: 20px 16px 0; }
     .hero-title { font-size: clamp(32px, 9.5vw, 40px); }
     .hero-sub { font-size: 13px; margin-top: 6px; }
+    .hero-epigraph { font-size: 12px; line-height: 1.65; margin-top: 12px; padding-top: 10px; }
     .hero-cta { margin-top: 12px; padding: 9px 18px; }
     .digest-band { padding-bottom: 10px; }
     .digest-label { margin-bottom: 10px; }
@@ -652,6 +728,7 @@
       <nav class="topnav" id="topnav">
         <a href="#board" data-i18n="navBoard"></a>
         <a href="#grinders" data-i18n="navHg"></a>
+        <a href="#" id="fbOpen" data-i18n="navFb"></a>
       </nav>
       <div class="lang" id="lang" role="group" aria-label="Language">
         <button class="lang-btn" data-l="ru">RU</button>
@@ -662,6 +739,7 @@
   <div class="hero">
     <div class="hero-title" lang="en">After the <span class="fall">Fall</span></div>
     <div class="hero-sub" data-i18n="heroSub"></div>
+    <p class="hero-epigraph" data-i18n="epi"></p>
     <a class="hero-cta" href="#board" data-i18n="heroCta"></a>
   </div>
   <section class="digest-band" role="region" aria-labelledby="digestLabel">
@@ -705,16 +783,22 @@
         </table>
       </div>
       <aside class="side" id="grinders">
-        <div class="side-card">
-          <h2 class="side-title"><span lang="en">High <span class="hl">Grinders</span></span> · <span data-i18n="hgT100"></span></h2>
+        <details class="side-card" open>
+          <summary class="side-sum">
+            <h2 class="side-title"><span lang="en">High <span class="hl">Grinders</span></span> · <span data-i18n="hgT100"></span></h2>
+            <span class="acc-arrow" aria-hidden="true">▾</span>
+          </summary>
           <div class="side-sub" data-i18n="hgS100"></div>
           <div class="hg-list" id="hg100"></div>
-        </div>
-        <div class="side-card">
-          <h2 class="side-title"><span lang="en">High <span class="hl">Grinders</span></span> · <span data-i18n="hgT1000"></span></h2>
+        </details>
+        <details class="side-card" open>
+          <summary class="side-sum">
+            <h2 class="side-title"><span lang="en">High <span class="hl">Grinders</span></span> · <span data-i18n="hgT1000"></span></h2>
+            <span class="acc-arrow" aria-hidden="true">▾</span>
+          </summary>
           <div class="side-sub" data-i18n="hgS1000"></div>
           <div class="hg-list" id="hg1000"></div>
-        </div>
+        </details>
       </aside>
     </div>
     <dl class="footer legend">
@@ -722,6 +806,16 @@
       <div><dt aria-hidden="true">0</dt><dd data-i18n="legZero"></dd></div>
       <div><dt aria-hidden="true">≈</dt><dd data-i18n="legAmbig"></dd></div>
     </dl>
+  </div>
+  <div class="fb-overlay" id="fbOverlay" hidden>
+    <div class="fb-modal" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+      <button type="button" class="fb-close" id="fbClose" aria-label="Close">×</button>
+      <h2 class="fb-title" id="fbTitle" data-i18n="fbTitle"></h2>
+      <p class="fb-hint" data-i18n="fbHint"></p>
+      <textarea id="fbText" maxlength="300" rows="4"></textarea>
+      <button type="button" class="fb-send" id="fbSend" data-i18n="fbSend"></button>
+      <p class="fb-done" id="fbDone" data-i18n="fbDone" hidden></p>
+    </div>
   </div>
   <button type="button" class="back-top" id="backTop">↑</button>
 <script src="data.js"></script>
@@ -746,11 +840,14 @@
       legZero: "место не изменилось",
       legAmbig: "несколько игроков с одинаковым ником, сопоставление по порядку мест",
       digestLabel: "Сводка · обновляется каждый час",
-      navBoard: "Таблица", navHg: "Гриндеры", heroCta: "К таблице ↓",
+      navBoard: "Table", navHg: "Grinders", navFb: "Feedback", heroCta: "К таблице ↓",
       dLeader: "Лидер сейчас", dOf: "из",
       dClimb: "Взлёт · с вайпа", dClimb24: "Взлёт · за сутки",
       dFall: "Рекордное падение", dFallStar: "Падение · известные",
       dKept: "Из стартового топ-10 в топ-10",
+      epi: "31 июля 2026 года Valve обнулила рейтинг сильнейших игроков мира. Шестнадцать тысяч MMR превратились в девять с половиной. В последующие дни и недели пять тысяч игроков Европы начали восхождение заново — этот сайт следит за каждым из них.",
+      fbTitle: "Обратная связь", fbHint: "Баг, идея, чего не хватает — пара слов:",
+      fbSend: "Отправить", fbDone: "Спасибо! Улетело.",
       empty: "Ничего не найдено — измените запрос или фильтр",
       hgT100: "топ-100", hgT1000: "топ-1000",
       hgS100: "самый большой рост · места 1–100", hgS1000: "самый большой рост · места 101–1000",
@@ -786,11 +883,14 @@
       legZero: "rank unchanged",
       legAmbig: "several players share the same nick; matched by rank order",
       digestLabel: "Digest · updates hourly",
-      navBoard: "Table", navHg: "Grinders", heroCta: "To the table ↓",
+      navBoard: "Table", navHg: "Grinders", navFb: "Feedback", heroCta: "To the table ↓",
       dLeader: "Current leader", dOf: "of",
       dClimb: "Climb · since wipe", dClimb24: "Climb · last 24h",
       dFall: "Record fall", dFallStar: "Fall · notable players",
       dKept: "Starting top-10 still in top-10",
+      epi: "On July 31, 2026, Valve reset the rating of the world's strongest players. Sixteen thousand MMR became nine and a half. In the days and weeks that followed, five thousand players across Europe began the climb again — this site watches every one of them.",
+      fbTitle: "Feedback", fbHint: "Bug, idea, missing feature — a few words:",
+      fbSend: "Send", fbDone: "Thanks! Sent.",
       empty: "Nothing found — change the query or filter",
       hgT100: "top 100", hgT1000: "top 1000",
       hgS100: "biggest climbs · ranks 1–100", hgS1000: "biggest climbs · ranks 101–1000",
@@ -879,9 +979,15 @@
     return f;
   })();
 
-  function factCard(type, label, value) {
+  var EMO = [["fire", "🔥"], ["skull", "💀"], ["clown", "🤡"], ["heart", "❤️"]];
+  function factCard(type, label, value, id) {
+    var picked = store.get("lb-react-" + id);
+    var re = '<span class="fact-react">' + EMO.map(function (e) {
+      return '<button type="button" class="re-btn' + (picked === e[0] ? " on" : "") +
+        '" data-card="' + id + '" data-emo="' + e[0] + '" aria-label="' + e[1] + '">' + e[1] + "</button>";
+    }).join("") + "</span>";
     return '<article class="fact fact--' + type + '"><span class="fact-label">' + label +
-      '</span><span class="fact-value">' + value + "</span></article>";
+      '</span><span class="fact-value">' + value + "</span>" + re + "</article>";
   }
 
   function renderDigest() {
@@ -890,22 +996,22 @@
     var c = [];
     var day = window.LB.day, nf = window.LB.nf;
     if (day && day.climb) c.push(factCard("up", T.dClimb24,
-      '<span class="fact-nick">' + esc(day.climb.n) + '</span><span class="fact-delta f-up">+' + day.climb.d + "</span>"));
+      '<span class="fact-nick">' + esc(day.climb.n) + '</span><span class="fact-delta f-up">+' + day.climb.d + "</span>", "climb24"));
     if (facts.climb) c.push(factCard("up", T.dClimb,
-      '<span class="fact-nick">' + esc(facts.climb.n) + '</span><span class="fact-delta f-up">+' + facts.climb.d + "</span>"));
+      '<span class="fact-nick">' + esc(facts.climb.n) + '</span><span class="fact-delta f-up">+' + facts.climb.d + "</span>", "climb"));
     var fall = nf || facts.fall;
     if (fall) c.push(factCard("down", nf ? T.dFallStar : T.dFall,
-      '<span class="fact-nick">' + esc(fall.n) + '</span><span class="fact-delta f-down">−' + (-fall.d) + "</span>"));
+      '<span class="fact-nick">' + esc(fall.n) + '</span><span class="fact-delta f-down">−' + (-fall.d) + "</span>", "fall"));
     if (facts.leader) {
       var lv = facts.leader.d === null ? ""
         : facts.leader.d > 0 ? '<span class="fact-delta f-up">+' + facts.leader.d + "</span>"
         : facts.leader.d < 0 ? '<span class="fact-delta f-down">−' + (-facts.leader.d) + "</span>"
         : '<span class="fact-delta fact-delta--steel">0</span>';
       c.push(factCard("gold", T.dLeader,
-        '<span class="fact-nick fact-nick--gold">' + esc(facts.leader.n) + "</span>" + lv));
+        '<span class="fact-nick fact-nick--gold">' + esc(facts.leader.n) + "</span>" + lv, "leader"));
     }
     c.push(factCard("surv", '<span lang="en">Top 10 Survivors</span><span class="fact-label-sub">' + T.dKept + "</span>",
-      '<span class="fact-delta fact-delta--surv">' + facts.kept + ' <span class="fact-of">' + T.dOf + "</span> 10</span>"));
+      '<span class="fact-delta fact-delta--surv">' + facts.kept + ' <span class="fact-of">' + T.dOf + "</span> 10</span>", "surv"));
     el.innerHTML = c.join("");
   }
 
@@ -1235,6 +1341,50 @@
     renderSide();
     render();
   });
+
+  /* эмодзи-реакции на карточках сводки → событие в аналитику */
+  document.getElementById("digest").addEventListener("click", function (ev) {
+    var b = ev.target.closest(".re-btn");
+    if (!b) return;
+    var was = b.classList.contains("on");
+    b.parentNode.querySelectorAll(".re-btn").forEach(function (x) { x.classList.remove("on"); });
+    store.set("lb-react-" + b.dataset.card, was ? "" : b.dataset.emo);
+    if (!was) {
+      b.classList.add("on");
+      if (window.gtag) gtag("event", "react", { card: b.dataset.card, emoji: b.dataset.emo });
+    }
+  });
+
+  /* гриндеры: на десктопе всегда раскрыты, на мобиле — аккордеоны (свернуты) */
+  var accMq = window.matchMedia("(max-width: 980px)");
+  function accSync() {
+    document.querySelectorAll(".side details").forEach(function (d) { d.open = !accMq.matches; });
+  }
+  accSync();
+  if (accMq.addEventListener) accMq.addEventListener("change", accSync);
+
+  /* обратная связь: попап → событие в аналитику */
+  (function () {
+    var ov = document.getElementById("fbOverlay"), tx = document.getElementById("fbText"),
+        done = document.getElementById("fbDone");
+    function openFb(ev) { if (ev) ev.preventDefault(); ov.hidden = false; done.hidden = true; tx.focus(); }
+    function closeFb() { ov.hidden = true; }
+    document.getElementById("fbOpen").addEventListener("click", openFb);
+    document.getElementById("fbClose").addEventListener("click", closeFb);
+    ov.addEventListener("click", function (ev) { if (ev.target === ov) closeFb(); });
+    document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !ov.hidden) closeFb(); });
+    document.getElementById("fbSend").addEventListener("click", function () {
+      var msg = tx.value.trim();
+      if (!msg) { tx.focus(); return; }
+      if (window.gtag) gtag("event", "feedback", {
+        fb_1: msg.slice(0, 100), fb_2: msg.slice(100, 200), fb_3: msg.slice(200, 300),
+        fb_len: msg.length, ui_lang: lang
+      });
+      tx.value = "";
+      done.hidden = false;
+      setTimeout(closeFb, 1400);
+    });
+  })();
 
   if (query) document.getElementById("search").value = query;
   applyStatic();

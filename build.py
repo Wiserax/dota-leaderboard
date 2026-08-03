@@ -91,7 +91,8 @@ def main():
             entry["d"] = None  # новичок на лидерборде
         players.append(entry)
 
-    # взлёт за суточное окно (сопоставление дублей ников — по порядку мест)
+    # взлёт за суточное окно среди текущего топ-100 (иначе висят анонимные
+    # гриндеры из глубины борда); сопоставление дублей ников — по порядку мест
     day_used = {name: 0 for name in day["ranks"]}
     day_climb = None
     for p in current["leaderboard"]:
@@ -100,7 +101,7 @@ def main():
             old_r = day["ranks"][name][day_used[name]]
             day_used[name] += 1
             dd = old_r - p["rank"]
-            if dd > 0 and (day_climb is None or dd > day_climb["d"]):
+            if dd > 0 and p["rank"] <= 100 and (day_climb is None or dd > day_climb["d"]):
                 day_climb = {"n": name, "d": dd, "r": p["rank"]}
 
     # самое глубокое падение среди известных игроков

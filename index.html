@@ -155,14 +155,16 @@
   .side-sum::-webkit-details-marker { display: none; }
   .acc-arrow { display: none; color: var(--steel); font-size: 12px; transition: transform .15s ease; }
   @media (max-width: 980px) {
-    .layout { grid-template-columns: 1fr; }
-    .side { /* свернутые аккордеоны гриндеров — над таблицей, не съедают экран */
-      position: static; order: -1;
+    .layout { grid-template-columns: 1fr; gap: 16px; }
+    .side { /* гриндеры уходят ПОД таблицу: между фильтрами и данными ничего не стоит */
+      position: static; order: 1;
       display: grid; grid-template-columns: 1fr; gap: 8px;
     }
     .side-sum { cursor: pointer; }
     .acc-arrow { display: inline; }
     .side-card[open] .acc-arrow { transform: rotate(180deg); }
+    /* до готовности JS держим аккордеоны свёрнутыми, чтобы не мигали раскрытыми */
+    body:not(.acc-ready) .side-card > :not(summary) { display: none; }
   }
 
   /* ── topbar ─────────────────────────────────────────── */
@@ -364,6 +366,11 @@
   .re-btn:active { transform: scale(1.32); }
   .re-btn.on { opacity: 1; filter: none; }
   .re-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .re-n {
+    font: 600 10px/1 var(--body); color: var(--dim);
+    margin-left: 3px; vertical-align: 1px; font-variant-numeric: tabular-nums;
+  }
+  .re-btn.on .re-n { color: var(--ember-hi); }
   @media (max-width: 1023px) {
     .digest-track {
       overflow-x: auto; scroll-snap-type: x proximity;
@@ -683,7 +690,12 @@
     .hero { padding: 20px 16px 0; }
     .hero-title { font-size: clamp(32px, 9.5vw, 40px); }
     .hero-sub { font-size: 13px; margin-top: 6px; }
-    .hero-epigraph { font-size: 12px; line-height: 1.65; margin-top: 12px; padding-top: 10px; }
+    .hero-epigraph { /* свёрнут до двух строк, тап разворачивает */
+      font-size: 12px; line-height: 1.6; margin-top: 10px; padding-top: 10px;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+      overflow: hidden; cursor: pointer;
+    }
+    .hero-epigraph.open { -webkit-line-clamp: unset; }
     .hero-cta { margin-top: 12px; padding: 9px 18px; }
     .digest-band { padding-bottom: 10px; }
     .digest-label { margin-bottom: 10px; }
@@ -702,10 +714,43 @@
     .sub { margin-left: 0; }
     .sub .t-base { display: none; }
     .stats { display: none; }
-    .controls { margin: 12px 0 6px; }
-    .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    /* .controls разбираем, чтобы приклеить только полосу фильтров */
+    .controls { display: contents; }
+    .search { display: block; width: 100%; height: 40px; margin: 10px 0 6px; }
+    .tabs {
+      position: sticky; top: 0; z-index: 6;
+      flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+      margin: 0 -16px; padding: 0 16px;
+      /* тени по краям гаснут у границ: честный признак, что фильтры прокручиваются */
+      background:
+        linear-gradient(90deg, #0c0f14 40%, rgba(12,15,20,0)) left / 26px 100% no-repeat local,
+        linear-gradient(90deg, rgba(12,15,20,0), #0c0f14 60%) right / 26px 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.5), transparent) left / 13px 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.5), transparent) right / 13px 100% no-repeat scroll,
+        var(--bg);
+      scroll-snap-type: x proximity;
+    }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: 0 0 auto; padding: 0 10px; font-size: 12px; line-height: 44px; }
+    thead th { top: 44px; }
+    #board, #grinders { scroll-margin-top: 52px; }
+    .tab { flex: 0 0 auto; padding: 0 10px; font-size: 12px; line-height: 44px; scroll-snap-align: start; }
+    .th-sort[aria-sort="none"] .dir::before { content: "↕"; opacity: .4; margin-left: 4px; }
+    /* плотнее строки: больше данных на экран */
+    tbody td { padding: 7px 10px; }
+    thead th { padding: 10px 10px; letter-spacing: .1em; }
+    .name {
+      display: inline-block; max-width: 100%; vertical-align: bottom;
+      line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .col-rank, .col-delta { font-size: 14px; }
+    .topnav a[href="#board"] { display: none; } /* дублирует кнопку "К таблице" */
+    .topnav a { padding: 15px 8px; }
+    /* данные показываем первыми, а не последними */
+    .controls, .count-note { animation-delay: .06s; }
+    .board { animation-delay: .12s; }
+    .side-card { animation: none; }
+    .sub .t-now { display: none; }
+    .sub .t-ago { display: inline; }
     .tab-n {
       display: inline; font: 600 10px/1 var(--body);
       color: var(--dim); margin-left: 4px; vertical-align: 1px;
@@ -718,7 +763,18 @@
     thead th, tbody td { padding-left: 10px; padding-right: 10px; }
     .col-rank { width: 48px; }
     .col-delta { width: 84px; }
-    .team { display: block; margin: 2px 0 0 24px; }
+    .team { display: block; margin: 0 0 0 24px; font-size: 11px; line-height: 1.3; }
+    .tabs { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
+  }
+  /* тач: hover не существует, поэтому реакции не должны выглядеть выключенными */
+  @media (hover: none) {
+    .re-btn { opacity: .6; filter: none; }
+    .re-btn:hover { transform: none; background: transparent; }
+  }
+  @media (max-width: 640px) {
+    .fact-react { gap: 0; margin-top: 4px; margin-left: -7px; }
+    .re-btn { font-size: 15px; padding: 8px 7px; white-space: nowrap; } /* цель 33x31, WCAG AA */
+    .hero-cta { display: none; } /* таблица и так в первом экране */
   }
 </style>
 </head>
@@ -761,7 +817,8 @@
       <div class="stats" id="stats"></div>
     </header>
     <div class="controls">
-      <input class="search" id="search" type="search" enterkeyhint="search">
+      <input class="search" id="search" type="search" enterkeyhint="search"
+           autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
       <div class="tabs" id="tabs" role="group">
         <button type="button" class="tab active" data-f="all"></button>
         <button type="button" class="tab" data-f="up"></button>
@@ -850,6 +907,7 @@
       fbTitle: "Обратная связь", fbHint: "Баг, идея, чего не хватает. Пара слов:",
       fbSend: "Отправить", fbDone: "Спасибо! Улетело.",
       empty: "Ничего не найдено: измените запрос или фильтр",
+      updated: "Обновлено ", agoNow: "только что", agoMin: " мин назад", agoHour: " ч назад",
       hgT100: "топ-100", hgT1000: "топ-1000",
       hgS100: "самый большой рост · места 1-100", hgS1000: "самый большой рост · места 101-1000",
       hgEmpty: "пока пусто",
@@ -893,6 +951,7 @@
       fbTitle: "Feedback", fbHint: "Bug, idea, missing feature. A few words:",
       fbSend: "Send", fbDone: "Thanks! Sent.",
       empty: "Nothing found: change the query or filter",
+      updated: "Updated ", agoNow: "just now", agoMin: " min ago", agoHour: " h ago",
       hgT100: "top 100", hgT1000: "top 1000",
       hgS100: "biggest climbs · ranks 1-100", hgS1000: "biggest climbs · ranks 101-1000",
       hgEmpty: "nothing yet",
@@ -920,6 +979,13 @@
   var esc = function (s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   };
+  var isPhone = function () { return window.matchMedia("(max-width: 640px)").matches; };
+  var fmtAgo = function (ts) { /* «обновлено 12 мин назад» понятнее, чем время слепка */
+    var m = Math.max(0, Math.round((Date.now() / 1000 - ts) / 60));
+    if (m < 1) return T.agoNow;
+    if (m < 60) return m + T.agoMin;
+    return Math.round(m / 60) + T.agoHour;
+  };
   var fmtTime = function (ts) {
     return new Date(ts * 1000).toLocaleString(T.locale, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
   };
@@ -937,7 +1003,8 @@
 
   var FILTERS = ["all", "up", "down", "same", "new"];
   var SORTS = ["rank", "delta"];
-  var PAGE = 500, STEP = 2000;
+  var MOBILE = window.matchMedia("(max-width: 640px)").matches;
+  var PAGE = MOBILE ? 200 : 500, STEP = MOBILE ? 1000 : 2000;
   var limit = PAGE;
 
   function readHash() {
@@ -985,7 +1052,8 @@
     var picked = store.get("lb-react-" + id);
     var re = '<span class="fact-react">' + EMO.map(function (e) {
       return '<button type="button" class="re-btn' + (picked === e[0] ? " on" : "") +
-        '" data-card="' + id + '" data-emo="' + e[0] + '" aria-label="' + e[1] + '">' + e[1] + "</button>";
+        '" data-card="' + id + '" data-emo="' + e[0] + '" aria-label="' + e[1] + '">' + e[1] +
+        '<span class="re-n" hidden></span></button>';
     }).join("") + "</span>";
     return '<article class="fact fact--' + type + '"><span class="fact-label">' + label +
       '</span><span class="fact-value">' + value + "</span>" + re + "</article>";
@@ -1014,6 +1082,42 @@
     c.push(factCard("surv", '<span lang="en">Top 10 Survivors</span><span class="fact-label-sub">' + T.dKept + "</span>",
       '<span class="fact-delta fact-delta--surv">' + facts.kept + ' <span class="fact-of">' + T.dOf + "</span> 10</span>", "surv"));
     el.innerHTML = c.join("");
+    loadReactCounts();
+  }
+
+  /* счётчики реакций: публичный эндпоинт GoatCounter, кэш на 5 минут */
+  var GC = "https://141-148-232-49.sslip.io";
+  var reCache = {};
+  function paintCount(btn, n) {
+    var s = btn.querySelector(".re-n");
+    if (!s) return;
+    s.textContent = n > 0 ? n : "";
+    s.hidden = n <= 0;
+  }
+  function loadReactCounts() {
+    if (!window.fetch) return;
+    document.querySelectorAll("#digest .re-btn").forEach(function (b) {
+      var key = "react/" + b.dataset.card + "/" + b.dataset.emo;
+      if (key in reCache) { paintCount(b, reCache[key]); return; }
+      var cached = store.get("lb-rc-" + key);
+      if (cached) {
+        var parts = cached.split(":");
+        if (Date.now() - (+parts[1] || 0) < 300000) {
+          reCache[key] = +parts[0];
+          paintCount(b, reCache[key]);
+          return;
+        }
+      }
+      fetch(GC + "/counter/" + encodeURIComponent(key) + ".json")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var n = d ? parseInt(String(d.count).replace(/\D/g, ""), 10) || 0 : 0;
+          reCache[key] = n;
+          store.set("lb-rc-" + key, n + ":" + Date.now());
+          paintCount(b, n);
+        })
+        .catch(function () {});
+    });
   }
 
   function applyStatic() {
@@ -1042,7 +1146,8 @@
     });
     document.getElementById("times").innerHTML =
       '<span class="t-base">' + esc(T.before + fmtTime(window.LB.baselineTime)) + '<span aria-hidden="true">  ·  </span></span>' +
-      '<span class="t-now">' + esc(T.now + fmtTime(window.LB.currentTime)) + "</span>";
+      '<span class="t-now">' + esc(T.now + fmtTime(window.LB.currentTime)) + "</span>" +
+      '<span class="t-ago">' + esc(T.updated + fmtAgo(window.LB.currentTime)) + "</span>";
     document.getElementById("stats").innerHTML =
       '<button type="button" class="kpi" data-f="all"><span class="kpi-label">' + T.players + '</span><span class="kpi-value"><span class="n" data-n="' + players.length + '">' + fmtNum(players.length) + "</span></span></button>" +
       '<button type="button" class="kpi" data-f="up"><span class="kpi-label">' + T.up + '</span><span class="kpi-value up"><span class="n" data-n="' + counts.ups + '">' + fmtNum(counts.ups) + "</span></span></button>" +
@@ -1257,7 +1362,7 @@
     if (rest > 0) rowsEl.insertAdjacentHTML("beforeend", moreRowHTML(rest));
     updateNote(m.length);
     var btn = rowsEl.querySelector(".more-btn");
-    if (btn) btn.focus();
+    if (btn) btn.focus({ preventScroll: true }); /* без preventScroll браузер уносит в конец списка */
     else {
       rowsEl.setAttribute("tabindex", "-1");
       rowsEl.focus();
@@ -1306,7 +1411,7 @@
       var s = document.getElementById("search");
       s.value = "";
       setFilter("all");
-      s.focus();
+      if (!isPhone()) s.focus(); /* на телефоне фокус поднимает клавиатуру поверх результата */
     }
   });
   document.querySelector(".side").addEventListener("click", function (e) {
@@ -1316,7 +1421,8 @@
     s.value = row.dataset.n;
     query = row.dataset.n;
     setFilter("all");
-    s.focus();
+    if (isPhone()) document.getElementById("board").scrollIntoView({ block: "start" });
+    else s.focus();
   });
   window.addEventListener("hashchange", function () {
     readHash();
@@ -1352,6 +1458,10 @@
     store.set("lb-react-" + b.dataset.card, was ? "" : b.dataset.emo);
     if (!was) {
       b.classList.add("on");
+      var k = "react/" + b.dataset.card + "/" + b.dataset.emo; /* сразу рисуем свой голос */
+      reCache[k] = (reCache[k] || 0) + 1;
+      store.set("lb-rc-" + k, reCache[k] + ":" + Date.now());
+      paintCount(b, reCache[k]);
       if (window.gtag) gtag("event", "react", { card: b.dataset.card, emoji: b.dataset.emo });
       if (window.goatcounter && goatcounter.count) goatcounter.count({
         path: "react/" + b.dataset.card + "/" + b.dataset.emo, title: "Реакция", event: true });
@@ -1364,7 +1474,20 @@
     document.querySelectorAll(".side details").forEach(function (d) { d.open = !accMq.matches; });
   }
   accSync();
+  document.body.classList.add("acc-ready");
   if (accMq.addEventListener) accMq.addEventListener("change", accSync);
+
+  /* эпиграф на телефоне свёрнут до двух строк, тап разворачивает */
+  (function () {
+    var ep = document.querySelector(".hero-epigraph");
+    if (!ep) return;
+    ep.setAttribute("tabindex", "0");
+    var toggle = function () { if (isPhone()) ep.classList.toggle("open"); };
+    ep.addEventListener("click", toggle);
+    ep.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    });
+  })();
 
   /* обратная связь: попап → событие в аналитику */
   (function () {

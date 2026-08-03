@@ -5,3 +5,5 @@ tools/ga-key.json
 tools/ga-token.json
 tools/ga_oauth.py
 tools/*creds*.json
+shots/
+prod_data_tmp.js

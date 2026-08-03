@@ -64,6 +64,10 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-padding-top: 48px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
   body {
     background: var(--bg);
     color: var(--ink);
@@ -189,9 +193,12 @@
     gap: 8px; margin-top: 24px;
   }
   .kpi {
+    appearance: none; font: inherit; text-align: left; color: inherit;
+    cursor: pointer; display: block; width: 100%;
     background: var(--panel); border: 1px solid var(--line);
     border-radius: 8px; padding: 12px 16px;
   }
+  .kpi.active { border-color: #52657a; background: #17202b; }
   .kpi-label {
     display: block; font: 700 11px/1.2 var(--body);
     text-transform: uppercase; letter-spacing: .09em;
@@ -249,6 +256,17 @@
     color: var(--steel); padding: 13px 16px;
     border-bottom: 2px solid var(--ember-deep);
   }
+  .th-sort { cursor: pointer; user-select: none; }
+  .th-sort:hover { color: var(--ink); }
+  .th-sort .dir { margin-left: 4px; color: var(--ember-hi); }
+  .th-info {
+    display: inline-block; margin-left: 8px; width: 16px; height: 16px;
+    line-height: 14px; text-align: center; letter-spacing: 0;
+    border: 1px solid #3a4757; border-radius: 50%;
+    color: var(--dim); cursor: pointer; font-size: 10px;
+    transition: color .12s ease, border-color .12s ease;
+  }
+  .th-info:hover { color: var(--ink); border-color: var(--steel); }
   tbody td { padding: 10px 16px; }
   tbody tr:nth-child(odd) { background: var(--row); }
   tbody tr:nth-child(even) { background: var(--row-alt); }
@@ -293,6 +311,23 @@
   .name { color: var(--ink); font-weight: 500; }
   .team { color: var(--steel); font-size: 12px; margin-left: 8px; }
   .empty-row td { padding: 32px 16px; text-align: center; color: var(--dim); }
+  .reset-btn {
+    margin-left: 12px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 6px; color: var(--steel); padding: 6px 12px;
+    font: 500 12px var(--body); cursor: pointer;
+    transition: color .12s ease, border-color .12s ease;
+  }
+  .reset-btn:hover { color: var(--ink); border-color: #34404f; }
+  .back-top {
+    position: fixed; right: 20px; bottom: 20px; z-index: 40;
+    width: 44px; height: 44px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--panel);
+    color: var(--steel); font-size: 18px; cursor: pointer;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, color .12s ease, border-color .12s ease;
+  }
+  .back-top.show { opacity: 1; pointer-events: auto; }
+  .back-top:hover { color: var(--ink); border-color: #34404f; }
 
   .footer {
     color: var(--dim); font-size: 12px; line-height: 1.7;
@@ -349,7 +384,7 @@
   <div class="topbar">
     <div class="wrap">
       <div class="logo">Dota <span>2</span> · Leaderboards</div>
-      <div class="lang" id="lang">
+      <div class="lang" id="lang" role="group" aria-label="Language">
         <button class="lang-btn" data-l="ru">RU</button>
         <button class="lang-btn" data-l="en">EN</button>
       </div>
@@ -369,8 +404,8 @@
       <div class="stats" id="stats"></div>
     </header>
     <div class="controls">
-      <input class="search" id="search" type="text">
-      <div class="tabs" id="tabs">
+      <input class="search" id="search" type="search" enterkeyhint="search">
+      <div class="tabs" id="tabs" role="group">
         <button type="button" class="tab active" data-f="all"></button>
         <button type="button" class="tab" data-f="up"></button>
         <button type="button" class="tab" data-f="down"></button>
@@ -381,22 +416,23 @@
     <div class="layout">
       <div class="board">
         <table>
+          <caption class="sr-only" data-i18n="caption"></caption>
           <thead><tr>
-            <th class="col-rank" data-i18n="thRank"></th>
-            <th class="col-delta" data-i18n="thChg"></th>
-            <th data-i18n="thPlayer"></th>
+            <th class="col-rank th-sort" scope="col" data-sort="rank" aria-sort="ascending"><span data-i18n="thRank"></span><span class="dir" aria-hidden="true">↑</span></th>
+            <th class="col-delta th-sort" scope="col" data-sort="delta" aria-sort="none"><span data-i18n="thChg"></span><span class="dir" aria-hidden="true"></span><span class="th-info" data-tip="legend" role="button" tabindex="0" aria-expanded="false">?</span></th>
+            <th scope="col" data-i18n="thPlayer"></th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
       <aside class="side">
         <div class="side-card">
-          <div class="side-title">High <span class="hl">Grinders</span> · <span data-i18n="hgT100"></span></div>
+          <h2 class="side-title"><span lang="en">High <span class="hl">Grinders</span></span> · <span data-i18n="hgT100"></span></h2>
           <div class="side-sub" data-i18n="hgS100"></div>
           <div class="hg-list" id="hg100"></div>
         </div>
         <div class="side-card">
-          <div class="side-title">High <span class="hl">Grinders</span> · <span data-i18n="hgT1000"></span></div>
+          <h2 class="side-title"><span lang="en">High <span class="hl">Grinders</span></span> · <span data-i18n="hgT1000"></span></h2>
           <div class="side-sub" data-i18n="hgS1000"></div>
           <div class="hg-list" id="hg1000"></div>
         </div>
@@ -404,6 +440,7 @@
     </div>
     <div class="footer" data-i18n="legend"></div>
   </div>
+  <button type="button" class="back-top" id="backTop">↑</button>
 <script src="data.js"></script>
 <script>
 (function () {
@@ -425,6 +462,10 @@
       hgT100: "топ-100", hgT1000: "топ-1000",
       hgS100: "самый большой рост · места 1–100", hgS1000: "самый большой рост · места 101–1000",
       hgEmpty: "пока пусто",
+      caption: "Таблица лидеров Европы с изменением позиций после вайпа рейтинга",
+      filters: "Фильтры",
+      reset: "Сбросить фильтры",
+      backTop: "Наверх",
       noDataTip: "Разницу не посчитать: на момент стартового лидерборда игрок был под другим ником либо его не было на борде",
       ambigTip: "Несколько игроков с таким ником — сопоставление по порядку мест",
       legend: "«—» — разницу посчитать не удалось: на стартовом лидерборде (31 июля, до вайпа) игрок значился под другим ником или отсутствовал, а API Доты отдаёт только ники, без ID аккаунтов, поэтому переименованных не сопоставить. «0» — место не изменилось. «≈» — несколько игроков с одинаковым ником, сопоставление по порядку мест.",
@@ -447,24 +488,45 @@
       hgT100: "top 100", hgT1000: "top 1000",
       hgS100: "biggest climbs · ranks 1–100", hgS1000: "biggest climbs · ranks 101–1000",
       hgEmpty: "nothing yet",
+      caption: "Europe leaderboard table with post-wipe position changes",
+      filters: "Filters",
+      reset: "Reset filters",
+      backTop: "Back to top",
       noDataTip: "Delta unavailable: at baseline time the player had a different nick or wasn't on the board",
       ambigTip: "Several players share this nick — matched by rank order",
       legend: "\"—\" — the delta couldn't be computed: on the baseline board (July 31, pre-wipe) the player was listed under a different nick or was absent, and the Dota API exposes nicks only, no account IDs, so renames can't be matched. \"0\" — rank unchanged. \"≈\" — several players share the same nick; matched by rank order.",
       locale: "en-GB"
     }
   };
-  var lang = localStorage.getItem("lb-lang") || "ru";
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  var lang = store.get("lb-lang") || "ru";
   var T = I18N[lang];
 
   var esc = function (s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   };
   var fmtTime = function (ts) {
-    return new Date(ts * 1000).toLocaleString(T.locale, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    return new Date(ts * 1000).toLocaleString(T.locale, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
   };
   var fmtNum = function (n) { return n.toLocaleString(T.locale); };
   var players = window.LB.players;
-  var filter = "all", query = "";
+
+  var FILTERS = ["all", "up", "down", "same", "new"];
+  var params = new URLSearchParams(location.hash.slice(1));
+  var filter = FILTERS.indexOf(params.get("f")) !== -1 ? params.get("f") : "all";
+  var query = params.get("q") || "";
+  var sortKey = "rank", sortDir = 1;
+
+  function syncURL() {
+    var p = new URLSearchParams();
+    if (filter !== "all") p.set("f", filter);
+    if (query) p.set("q", query);
+    var h = p.toString();
+    history.replaceState(null, "", h ? "#" + h : location.pathname + location.search);
+  }
 
   var counts = { ups: 0, downs: 0, news: 0, same: 0 };
   players.forEach(function (p) {
@@ -484,19 +546,39 @@
     var search = document.getElementById("search");
     search.placeholder = T.searchPh;
     search.setAttribute("aria-label", T.searchAria);
+    document.getElementById("tabs").setAttribute("aria-label", T.filters);
+    document.getElementById("backTop").setAttribute("aria-label", T.backTop);
     var tabNames = { all: T.tabAll, up: T.tabUp, down: T.tabDown, "new": T.tabNew };
     document.querySelectorAll(".tab").forEach(function (el) { el.textContent = tabNames[el.dataset.f]; });
     document.querySelectorAll(".lang-btn").forEach(function (el) {
-      el.classList.toggle("active", el.dataset.l === lang);
+      var active = el.dataset.l === lang;
+      el.classList.toggle("active", active);
+      el.setAttribute("aria-pressed", active);
     });
     document.getElementById("times").textContent =
       T.before + fmtTime(window.LB.baselineTime) + T.now + fmtTime(window.LB.currentTime);
     document.getElementById("stats").innerHTML =
-      '<div class="kpi"><span class="kpi-label">' + T.players + '</span><span class="kpi-value"><span class="n" data-n="' + players.length + '">' + fmtNum(players.length) + "</span></span></div>" +
-      '<div class="kpi"><span class="kpi-label">' + T.up + '</span><span class="kpi-value up">▲ <span class="n" data-n="' + counts.ups + '">' + fmtNum(counts.ups) + "</span></span></div>" +
-      '<div class="kpi"><span class="kpi-label">' + T.down + '</span><span class="kpi-value down">▼ <span class="n" data-n="' + counts.downs + '">' + fmtNum(counts.downs) + "</span></span></div>" +
-      '<div class="kpi"><span class="kpi-label">' + T.same + '</span><span class="kpi-value"><span class="n" data-n="' + counts.same + '">' + fmtNum(counts.same) + "</span></span></div>" +
-      '<div class="kpi"><span class="kpi-label">' + T.newPlayers + '</span><span class="kpi-value"><span class="n" data-n="' + counts.news + '">' + fmtNum(counts.news) + "</span></span></div>";
+      '<button type="button" class="kpi" data-f="all"><span class="kpi-label">' + T.players + '</span><span class="kpi-value"><span class="n" data-n="' + players.length + '">' + fmtNum(players.length) + "</span></span></button>" +
+      '<button type="button" class="kpi" data-f="up"><span class="kpi-label">' + T.up + '</span><span class="kpi-value up"><span aria-hidden="true">▲</span> <span class="n" data-n="' + counts.ups + '">' + fmtNum(counts.ups) + "</span></span></button>" +
+      '<button type="button" class="kpi" data-f="down"><span class="kpi-label">' + T.down + '</span><span class="kpi-value down"><span aria-hidden="true">▼</span> <span class="n" data-n="' + counts.downs + '">' + fmtNum(counts.downs) + "</span></span></button>" +
+      '<button type="button" class="kpi" data-f="same"><span class="kpi-label">' + T.same + '</span><span class="kpi-value"><span class="n" data-n="' + counts.same + '">' + fmtNum(counts.same) + "</span></span></button>" +
+      '<button type="button" class="kpi" data-f="new"><span class="kpi-label">' + T.newPlayers + '</span><span class="kpi-value"><span class="n" data-n="' + counts.news + '">' + fmtNum(counts.news) + "</span></span></button>";
+    syncActive();
+  }
+
+  function syncActive() {
+    document.querySelectorAll(".tab, .kpi").forEach(function (el) {
+      var active = el.dataset.f === filter;
+      el.classList.toggle("active", active);
+      el.setAttribute("aria-pressed", active);
+    });
+  }
+
+  function setFilter(f) {
+    filter = f;
+    syncActive();
+    syncURL();
+    render();
   }
 
   var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -525,7 +607,9 @@
   var tipOpenFor = null;
 
   function showTip(target) {
-    tipEl.textContent = target.dataset.tip === "ambig" ? T.ambigTip : T.noDataTip;
+    var key = target.dataset.tip;
+    tipEl.textContent = key === "ambig" ? T.ambigTip : key === "legend" ? T.legend : T.noDataTip;
+    target.setAttribute("aria-expanded", "true");
     tipEl.style.left = "0px";
     tipEl.style.top = "0px";
     tipEl.classList.add("show");
@@ -538,6 +622,7 @@
   }
   function hideTip() {
     if (!tipOpenFor) return;
+    tipOpenFor.setAttribute("aria-expanded", "false");
     tipEl.classList.remove("show");
     tipOpenFor = null;
   }
@@ -547,7 +632,11 @@
     else if (!e.target.closest(".tip-pop")) hideTip();
   });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") hideTip();
+    if (e.key === "Escape" && tipOpenFor) {
+      var trigger = tipOpenFor;
+      hideTip();
+      if (trigger.focus) trigger.focus();
+    }
     if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.tip) {
       e.preventDefault();
       tipOpenFor === e.target ? hideTip() : showTip(e.target);
@@ -557,15 +646,15 @@
   window.addEventListener("resize", hideTip);
 
   var deltaCell = function (p) {
-    var amb = p.a ? ' <span class="ambig" data-tip="ambig" role="button" tabindex="0">≈</span>' : "";
-    if (p.d === null) return '<span class="d-nodata" data-tip="nodata" role="button" tabindex="0">—</span>';
-    if (p.d > 0) return '<span class="d-up">▲ ' + p.d + "</span>" + amb;
-    if (p.d < 0) return '<span class="d-down">▼ ' + (-p.d) + "</span>" + amb;
+    var amb = p.a ? ' <span class="ambig" data-tip="ambig" role="button" tabindex="0" aria-expanded="false" aria-label="≈ — ' + T.ambigTip + '">≈</span>' : "";
+    if (p.d === null) return '<span class="d-nodata" data-tip="nodata" role="button" tabindex="0" aria-expanded="false" aria-label="' + T.noDataTip + '">—</span>';
+    if (p.d > 0) return '<span class="d-up"><span aria-hidden="true">▲</span> ' + p.d + "</span>" + amb;
+    if (p.d < 0) return '<span class="d-down"><span aria-hidden="true">▼</span> ' + (-p.d) + "</span>" + amb;
     return '<span class="d-zero">0</span>' + amb;
   };
   var flagCell = function (c) {
     if (!c) return '<span class="noflag"></span>';
-    return '<img class="flag" loading="lazy" src="https://flagcdn.com/16x12/' + c + '.png" alt="" onerror="this.outerHTML=\'<span class=noflag></span>\'">';
+    return '<img class="flag" loading="lazy" src="flags/' + c + '.png" alt="" onerror="this.outerHTML=\'<span class=noflag></span>\'">';
   };
 
   var rowsEl = document.getElementById("rows");
@@ -587,15 +676,38 @@
     });
   }
 
+  function sortedPlayers() {
+    if (sortKey === "delta") {
+      return players.slice().sort(function (a, b) {
+        if (a.d === null && b.d === null) return a.r - b.r;
+        if (a.d === null) return 1;
+        if (b.d === null) return -1;
+        return sortDir * (b.d - a.d) || a.r - b.r;
+      });
+    }
+    return sortDir === 1 ? players : players.slice().reverse();
+  }
+
+  function updateSortUI() {
+    document.querySelectorAll(".th-sort").forEach(function (th) {
+      var active = th.dataset.sort === sortKey;
+      var desc = sortKey === "delta" ? sortDir === 1 : sortDir === -1;
+      th.setAttribute("aria-sort", active ? (desc ? "descending" : "ascending") : "none");
+      th.querySelector(".dir").textContent = active ? (desc ? "↓" : "↑") : "";
+    });
+  }
+
   function render() {
     hideTip();
     var q = query.toLowerCase();
+    var list = sortedPlayers();
     var html = [];
     var shown = 0;
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i];
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
       if (filter === "up" && !(p.d !== null && p.d > 0)) continue;
       if (filter === "down" && !(p.d !== null && p.d < 0)) continue;
+      if (filter === "same" && p.d !== 0) continue;
       if (filter === "new" && p.d !== null) continue;
       if (q && p.n.toLowerCase().indexOf(q) === -1 && (p.t || "").toLowerCase().indexOf(q) === -1) continue;
       shown++;
@@ -607,33 +719,63 @@
     }
     rowsEl.innerHTML = html.length
       ? html.join("")
-      : '<tr class="empty-row"><td colspan="3">' + T.empty + "</td></tr>";
+      : '<tr class="empty-row"><td colspan="3">' + T.empty + '<button type="button" class="reset-btn">' + T.reset + "</button></td></tr>";
     noteEl.textContent = T.shown + fmtNum(shown) + T.of + fmtNum(players.length);
   }
 
+  var searchTimer;
   document.getElementById("search").addEventListener("input", function (e) {
-    query = e.target.value.trim();
-    render();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      query = e.target.value.trim();
+      syncURL();
+      render();
+    }, 150);
   });
   document.getElementById("tabs").addEventListener("click", function (e) {
     var t = e.target.closest(".tab");
-    if (!t) return;
-    document.querySelectorAll(".tab").forEach(function (el) { el.classList.remove("active"); });
-    t.classList.add("active");
-    filter = t.dataset.f;
+    if (t) setFilter(t.dataset.f);
+  });
+  document.getElementById("stats").addEventListener("click", function (e) {
+    var k = e.target.closest(".kpi");
+    if (k) setFilter(k.dataset.f);
+  });
+  document.querySelector("thead").addEventListener("click", function (e) {
+    if (e.target.closest(".th-info")) return;
+    var th = e.target.closest(".th-sort");
+    if (!th) return;
+    if (sortKey === th.dataset.sort) sortDir = -sortDir;
+    else { sortKey = th.dataset.sort; sortDir = 1; }
+    updateSortUI();
     render();
+  });
+  rowsEl.addEventListener("click", function (e) {
+    if (e.target.closest(".reset-btn")) {
+      query = "";
+      document.getElementById("search").value = "";
+      setFilter("all");
+    }
+  });
+  var backTop = document.getElementById("backTop");
+  window.addEventListener("scroll", function () {
+    backTop.classList.toggle("show", window.scrollY > 1200);
+  }, { passive: true });
+  backTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
   });
   document.getElementById("lang").addEventListener("click", function (e) {
     var b = e.target.closest(".lang-btn");
     if (!b || b.dataset.l === lang) return;
     lang = b.dataset.l;
-    localStorage.setItem("lb-lang", lang);
+    store.set("lb-lang", lang);
     applyStatic();
     renderSide();
     render();
   });
 
+  if (query) document.getElementById("search").value = query;
   applyStatic();
+  updateSortUI();
   renderSide();
   render();
   countUp();

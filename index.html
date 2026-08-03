@@ -6,6 +6,7 @@
 <!-- ga4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-THYFR0EMHT"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-THYFR0EMHT');</script>
+<script data-goatcounter="https://141-148-232-49.sslip.io/count" async src="https://141-148-232-49.sslip.io/count.js"></script>
 <!-- /ga4 -->
 <title>After the Fall · Лидерборд Европы после вайпа</title>
 <meta name="description" content="Кто взлетел и кто упал после вайпа рейтинга 31 июля. Лидерборд Европы Dota 2, обновляется каждый час.">
@@ -1352,6 +1353,8 @@
     if (!was) {
       b.classList.add("on");
       if (window.gtag) gtag("event", "react", { card: b.dataset.card, emoji: b.dataset.emo });
+      if (window.goatcounter && goatcounter.count) goatcounter.count({
+        path: "react/" + b.dataset.card + "/" + b.dataset.emo, title: "Реакция", event: true });
     }
   });
 
@@ -1380,6 +1383,9 @@
         fb_1: msg.slice(0, 100), fb_2: msg.slice(100, 200), fb_3: msg.slice(200, 300),
         fb_len: msg.length, ui_lang: lang
       });
+      /* GoatCounter пишет текст в path (лимит ~1000 симв) — так отзыв виден прямо в дашборде */
+      if (window.goatcounter && goatcounter.count) goatcounter.count({
+        path: "feedback/" + msg.slice(0, 200).replace(/[\r\n]+/g, " "), title: "Отзыв", event: true });
       tx.value = "";
       done.hidden = false;
       setTimeout(closeFb, 1400);

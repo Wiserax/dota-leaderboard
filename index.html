@@ -73,7 +73,47 @@
   ::selection { background: var(--ember-deep); color: #fff; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
-  .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+  .wrap { max-width: 1264px; margin: 0 auto; padding: 0 16px; }
+
+  /* ── two-column layout: board + side panel ──────────── */
+  .layout {
+    display: grid; grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 24px; align-items: start;
+  }
+  .side { display: grid; gap: 16px; position: sticky; top: 16px; }
+  .side-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px;
+  }
+  .side-title {
+    font: 500 14px/1.2 var(--display); text-transform: uppercase;
+    letter-spacing: .1em; color: var(--ink);
+  }
+  .side-title .hl { color: var(--ember-hi); }
+  .side-sub { color: var(--dim); font-size: 11px; margin-top: 4px; }
+  .hg-list { margin-top: 10px; }
+  .hg-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 0; font-size: 13px;
+  }
+  .hg-row + .hg-row { border-top: 1px solid var(--line); }
+  .hg-rank {
+    color: var(--steel); font: 500 14px/1 var(--display);
+    min-width: 44px; font-variant-numeric: tabular-nums;
+  }
+  .hg-name {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-weight: 500;
+  }
+  .hg-delta { color: var(--up); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .hg-empty { color: var(--dim); font-size: 12px; padding: 8px 0; }
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .side {
+      position: static;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+  }
 
   /* ── topbar ─────────────────────────────────────────── */
   .topbar {
@@ -109,13 +149,39 @@
   .lang-btn.active:hover { background: #a03325; }
   .lang-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
 
+  /* ── site hero ──────────────────────────────────────── */
+  .hero { padding: 52px 16px 4px; text-align: center; }
+  .hero-title {
+    font: 600 clamp(44px, 9vw, 92px)/1 var(--display);
+    text-transform: uppercase; letter-spacing: .06em; color: #f2efec;
+    text-shadow: 0 0 56px rgba(200, 64, 47, .38);
+  }
+  .hero-title .fall { color: var(--ember-hi); }
+  .hero-sub { color: var(--steel); margin-top: 12px; font-size: 14px; letter-spacing: .02em; }
+
   /* ── page header ────────────────────────────────────── */
-  header.page { padding: 40px 0 0; }
+  header.page { padding: 32px 0 0; position: relative; }
+  header.page::before {
+    content: ""; position: absolute; top: -56px; left: -120px;
+    width: 560px; height: 260px; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(200, 64, 47, .13), transparent);
+  }
+  .h1-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   h1 {
     font: 600 clamp(30px, 6vw, 44px)/1.05 var(--display);
     text-transform: uppercase; letter-spacing: .015em;
     border-left: 4px solid var(--ember); padding-left: 16px;
   }
+  .wipe-chip {
+    font: 600 13px/1 var(--display); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--gold); border: 1px solid #64512a; border-radius: 6px;
+    background: rgba(230, 180, 92, .08); padding: 8px 12px; white-space: nowrap;
+  }
+  .tagline {
+    color: var(--steel); font-size: 15px; line-height: 1.6;
+    margin: 14px 0 0 20px; max-width: 640px;
+  }
+  .tagline .hl { color: var(--ember-hi); font-weight: 600; }
   .sub {
     color: var(--steel); margin: 8px 0 0 20px; font-size: 13px;
     font-variant-numeric: tabular-nums;
@@ -203,12 +269,9 @@
   .d-up { color: var(--up); }
   .d-down { color: var(--down); }
   .d-zero { color: var(--dim); font-weight: 400; }
-  .d-new {
-    display: inline-block; color: var(--gold);
-    font: 700 11px/1 var(--body); letter-spacing: .12em;
-    border: 1px solid #64512a; border-radius: 4px;
-    background: rgba(230, 180, 92, .08); padding: 3px 7px;
-    cursor: help;
+  .d-nodata {
+    color: var(--dim); font-weight: 400; cursor: help;
+    border-bottom: 1px dotted var(--dim);
   }
   .ambig { color: var(--dim); font-weight: 400; cursor: help; border-bottom: 1px dotted var(--dim); }
   .flag { width: 16px; height: 12px; margin-right: 8px; vertical-align: -1px; border-radius: 2px; }
@@ -251,9 +314,17 @@
       </div>
     </div>
   </div>
+  <div class="hero">
+    <div class="hero-title">After the <span class="fall">Fall</span></div>
+    <div class="hero-sub" data-i18n="heroSub"></div>
+  </div>
   <div class="wrap">
     <header class="page">
-      <h1 data-i18n="h1"></h1>
+      <div class="h1-row">
+        <h1 data-i18n="h1"></h1>
+        <span class="wipe-chip" data-i18n="wipeChip"></span>
+      </div>
+      <p class="tagline" id="tagline"></p>
       <div class="sub" id="times"></div>
       <div class="stats" id="stats"></div>
     </header>
@@ -267,15 +338,29 @@
       </div>
     </div>
     <div class="count-note" id="note" aria-live="polite"></div>
-    <div class="board">
-      <table>
-        <thead><tr>
-          <th class="col-rank" data-i18n="thRank"></th>
-          <th class="col-delta" data-i18n="thChg"></th>
-          <th data-i18n="thPlayer"></th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
+    <div class="layout">
+      <div class="board">
+        <table>
+          <thead><tr>
+            <th class="col-rank" data-i18n="thRank"></th>
+            <th class="col-delta" data-i18n="thChg"></th>
+            <th data-i18n="thPlayer"></th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <aside class="side">
+        <div class="side-card">
+          <div class="side-title">High <span class="hl">Grinders</span> · <span data-i18n="hgT100"></span></div>
+          <div class="side-sub" data-i18n="hgS100"></div>
+          <div class="hg-list" id="hg100"></div>
+        </div>
+        <div class="side-card">
+          <div class="side-title">High <span class="hl">Grinders</span> · <span data-i18n="hgT1000"></span></div>
+          <div class="side-sub" data-i18n="hgS1000"></div>
+          <div class="hg-list" id="hg1000"></div>
+        </div>
+      </aside>
     </div>
     <div class="footer" data-i18n="legend"></div>
   </div>
@@ -284,37 +369,49 @@
 (function () {
   var I18N = {
     ru: {
-      title: "Dota 2 — Таблица лидеров · Европа",
-      h1: "Таблица лидеров — Европа",
-      before: "До сброса: ", now: "  ·  Сейчас: ",
+      title: "After the Fall · Лидерборд Европы после вайпа",
+      heroSub: "Что вайп рейтинга 31 июля сделал с лидербордом Европы",
+      h1: "Лидерборд Европы",
+      wipeChip: "После вайпа · 31 июля",
+      tagline: 'Это не просто лидерборд: у каждого игрока видно, насколько он <span class="hl">взлетел или упал после вайпа рейтинга</span>.',
+      before: "До вайпа: ", now: "  ·  Сейчас: ",
       players: "Игроков", up: "Поднялись", down: "Опустились",
-      same: "Без изменений", newPlayers: "Новых",
-      tabAll: "Все", tabUp: "▲ Поднялись", tabDown: "▼ Опустились", tabNew: "Новые",
+      same: "Без изменений", newPlayers: "Без данных",
+      tabAll: "Все", tabUp: "▲ Поднялись", tabDown: "▼ Опустились", tabNew: "Без данных",
       searchPh: "Поиск по нику или тегу команды…",
       searchAria: "Поиск по нику или тегу команды",
       thRank: "Место", thChg: "Изм.", thPlayer: "Игрок",
       shown: "Показано: ", of: " из ",
       empty: "Ничего не найдено — измените запрос или фильтр",
-      newTip: "Ника не было на лидерборде до сброса: новичок либо игрок сменил ник",
+      hgT100: "топ-100", hgT1000: "топ-1000",
+      hgS100: "самый большой рост · места 1–100", hgS1000: "самый большой рост · места 101–1000",
+      hgEmpty: "пока пусто",
+      noDataTip: "Разницу не посчитать: на момент стартового лидерборда игрок был под другим ником либо его не было на борде",
       ambigTip: "Несколько игроков с таким ником — сопоставление по порядку мест",
-      legend: "Изменение позиции — относительно последнего состояния лидерборда до сброса рейтинга (31 июля). NEW — ника не было на лидерборде до сброса: это либо новичок, либо игрок, сменивший ник (API Доты отдаёт только ники, без ID аккаунта, поэтому переименованных сопоставить нельзя). «≈» — на лидерборде несколько игроков с одинаковым ником, сопоставление по порядку мест.",
+      legend: "«—» — разницу посчитать не удалось: на стартовом лидерборде (31 июля, до вайпа) игрок значился под другим ником или отсутствовал, а API Доты отдаёт только ники, без ID аккаунтов, поэтому переименованных не сопоставить. «0» — место не изменилось. «≈» — несколько игроков с одинаковым ником, сопоставление по порядку мест.",
       locale: "ru-RU"
     },
     en: {
-      title: "Dota 2 — Leaderboard · Europe",
-      h1: "Leaderboard — Europe",
-      before: "Before reset: ", now: "  ·  Now: ",
+      title: "After the Fall · Europe leaderboard post-wipe",
+      heroSub: "What the July 31 rating wipe did to the Europe leaderboard",
+      h1: "Europe Leaderboard",
+      wipeChip: "Post-wipe · July 31",
+      tagline: 'Not just a leaderboard: it shows how far every player <span class="hl">rose or fell after the rating wipe</span>.',
+      before: "Before the wipe: ", now: "  ·  Now: ",
       players: "Players", up: "Climbed", down: "Dropped",
-      same: "Unchanged", newPlayers: "New",
-      tabAll: "All", tabUp: "▲ Climbed", tabDown: "▼ Dropped", tabNew: "New",
+      same: "Unchanged", newPlayers: "No data",
+      tabAll: "All", tabUp: "▲ Climbed", tabDown: "▼ Dropped", tabNew: "No data",
       searchPh: "Search by nick or team tag…",
       searchAria: "Search by nick or team tag",
       thRank: "Rank", thChg: "Chg.", thPlayer: "Player",
       shown: "Shown: ", of: " of ",
       empty: "Nothing found — change the query or filter",
-      newTip: "This nick wasn't on the pre-reset board: a newcomer or a renamed player",
+      hgT100: "top 100", hgT1000: "top 1000",
+      hgS100: "biggest climbs · ranks 1–100", hgS1000: "biggest climbs · ranks 101–1000",
+      hgEmpty: "nothing yet",
+      noDataTip: "Delta unavailable: at baseline time the player had a different nick or wasn't on the board",
       ambigTip: "Several players share this nick — matched by rank order",
-      legend: "Position change is measured against the last pre-reset leaderboard state (July 31). NEW — the nick wasn't on the pre-reset board: either a newcomer or a player who changed their nick (the Dota API exposes nicks only, no account IDs, so renames can't be matched). \"≈\" — several players share the same nick; matched by rank order.",
+      legend: "\"—\" — the delta couldn't be computed: on the baseline board (July 31, pre-wipe) the player was listed under a different nick or was absent, and the Dota API exposes nicks only, no account IDs, so renames can't be matched. \"0\" — rank unchanged. \"≈\" — several players share the same nick; matched by rank order.",
       locale: "en-GB"
     }
   };
@@ -346,6 +443,7 @@
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       el.textContent = T[el.dataset.i18n];
     });
+    document.getElementById("tagline").innerHTML = T.tagline;
     var search = document.getElementById("search");
     search.placeholder = T.searchPh;
     search.setAttribute("aria-label", T.searchAria);
@@ -361,15 +459,15 @@
       '<div class="kpi"><span class="kpi-label">' + T.up + '</span><span class="kpi-value up">▲ ' + fmtNum(counts.ups) + "</span></div>" +
       '<div class="kpi"><span class="kpi-label">' + T.down + '</span><span class="kpi-value down">▼ ' + fmtNum(counts.downs) + "</span></div>" +
       '<div class="kpi"><span class="kpi-label">' + T.same + '</span><span class="kpi-value">' + fmtNum(counts.same) + "</span></div>" +
-      '<div class="kpi"><span class="kpi-label">' + T.newPlayers + '</span><span class="kpi-value new">' + fmtNum(counts.news) + "</span></div>";
+      '<div class="kpi"><span class="kpi-label">' + T.newPlayers + '</span><span class="kpi-value">' + fmtNum(counts.news) + "</span></div>";
   }
 
   var deltaCell = function (p) {
     var amb = p.a ? ' <span class="ambig" title="' + T.ambigTip + '">≈</span>' : "";
-    if (p.d === null) return '<span class="d-new" title="' + T.newTip + '">NEW</span>';
+    if (p.d === null) return '<span class="d-nodata" title="' + T.noDataTip + '">—</span>';
     if (p.d > 0) return '<span class="d-up">▲ ' + p.d + "</span>" + amb;
     if (p.d < 0) return '<span class="d-down">▼ ' + (-p.d) + "</span>" + amb;
-    return '<span class="d-zero">—</span>' + amb;
+    return '<span class="d-zero">0</span>' + amb;
   };
   var flagCell = function (c) {
     if (!c) return '<span class="noflag"></span>';
@@ -378,6 +476,22 @@
 
   var rowsEl = document.getElementById("rows");
   var noteEl = document.getElementById("note");
+
+  function renderSide() {
+    [["hg100", 1, 100], ["hg1000", 101, 1000]].forEach(function (spec) {
+      var top = players
+        .filter(function (p) { return p.d !== null && p.d > 0 && p.r >= spec[1] && p.r <= spec[2]; })
+        .sort(function (a, b) { return b.d - a.d; })
+        .slice(0, 5);
+      document.getElementById(spec[0]).innerHTML = top.length
+        ? top.map(function (p) {
+            return '<div class="hg-row"><span class="hg-rank">#' + p.r + "</span>" +
+              '<span class="hg-name">' + flagCell(p.c) + esc(p.n) + "</span>" +
+              '<span class="hg-delta">▲ ' + p.d + "</span></div>";
+          }).join("")
+        : '<div class="hg-empty">' + T.hgEmpty + "</div>";
+    });
+  }
 
   function render() {
     var q = query.toLowerCase();
@@ -420,10 +534,12 @@
     lang = b.dataset.l;
     localStorage.setItem("lb-lang", lang);
     applyStatic();
+    renderSide();
     render();
   });
 
   applyStatic();
+  renderSide();
   render();
 })();
 </script>

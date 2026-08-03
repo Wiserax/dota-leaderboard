@@ -22,5 +22,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.js current.json
+          git add data.js current.json prev_day.json
           git diff --cached --quiet || (git commit -m "Update leaderboard data" && git push)

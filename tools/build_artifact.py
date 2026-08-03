@@ -10,6 +10,10 @@ OUT = os.path.join(REPO, "artifact-build.html")
 
 html = io.open(os.path.join(REPO, "index.html"), encoding="utf-8").read()
 
+# 0. GA-тег в артефакте бессмысленен: CSP артефакта блокирует внешние хосты
+html, n_ga = re.subn(r"<!-- ga4 -->.*?<!-- /ga4 -->\n?", "", html, flags=re.S)
+assert n_ga == 1, "ga4 marker block not found"
+
 # 1. fonts -> data URIs
 def font_repl(m):
     p = os.path.join(REPO, m.group(1).replace("/", os.sep))

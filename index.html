@@ -252,12 +252,13 @@
     to { filter: drop-shadow(0 0 30px rgba(224, 90, 65, .48)); }
   }
   .hero-sub { color: var(--steel); margin-top: 12px; font-size: 14px; letter-spacing: .02em; }
-  .hero-epigraph {
-    position: relative; max-width: 600px; margin: 20px auto 0;
-    padding-top: 16px; color: var(--dim);
-    font-size: 13px; line-height: 1.8; letter-spacing: .015em;
+  .hero-epigraph { /* цитата: один цвет, по центру, с воздухом вокруг */
+    position: relative; max-width: 46ch; margin: 22px auto 0;
+    padding-top: 18px; color: var(--steel);
+    font-size: 14px; line-height: 1.75; letter-spacing: .01em;
+    text-wrap: balance;
   }
-  .hero-epigraph::before { /* тонкая линия-датум над эпиграфом */
+  .hero-epigraph::before { /* тонкая линия-датум над цитатой */
     content: ""; position: absolute; top: 0; left: 50%;
     transform: translateX(-50%); width: 64px; height: 1px;
     background: var(--horizon); opacity: .8;
@@ -400,6 +401,7 @@
     color: var(--steel); margin: 8px 0 0 20px; font-size: 13px;
     font-variant-numeric: tabular-nums;
   }
+  .t-ago { display: none; } /* только на телефоне, вместо точного времени слепка */
 
   /* ── KPI tiles ──────────────────────────────────────── */
   .stats {
@@ -687,15 +689,14 @@
     .topnav { margin-right: 4px; gap: 0; }
     .topnav a { font-size: 11px; letter-spacing: .08em; padding: 12px 6px; }
     .lang-btn { padding: 6px 9px; }
-    .hero { padding: 20px 16px 0; }
+    .hero { padding: 18px 16px 8px; }
     .hero-title { font-size: clamp(32px, 9.5vw, 40px); }
-    .hero-sub { font-size: 13px; margin-top: 6px; }
-    .hero-epigraph { /* свёрнут до двух строк, тап разворачивает */
-      font-size: 12px; line-height: 1.6; margin-top: 10px; padding-top: 10px;
-      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-      overflow: hidden; cursor: pointer;
+    .hero-sub { display: none; } /* дублирует смысл цитаты, на телефоне лишний блок */
+    .hero-epigraph { /* единственный текст под заголовком */
+      font-size: 13px; line-height: 1.6; margin-top: 12px;
+      padding-top: 13px; max-width: 36ch;
     }
-    .hero-epigraph.open { -webkit-line-clamp: unset; }
+    .digest-band { padding-top: 16px; }
     .hero-cta { margin-top: 12px; padding: 9px 18px; }
     .digest-band { padding-bottom: 10px; }
     .digest-label { margin-bottom: 10px; }
@@ -903,7 +904,7 @@
       dClimb: "Взлёт · с вайпа", dClimb24: "Взлёт · за сутки · топ-100",
       dFall: "Рекордное падение", dFallStar: "Падение · известные",
       dKept: "Из стартового топ-10 в топ-10",
-      epi: "31 июля 2026 года Valve обнулила рейтинг сильнейших игроков мира. Шестнадцать тысяч MMR превратились в девять с половиной. В последующие дни и недели пять тысяч игроков Европы начали восхождение заново. Этот сайт следит за каждым из них.",
+      epi: "31 июля шестнадцать тысяч MMR стали девятью с половиной. Пять тысяч игроков Европы начали восхождение заново.",
       fbTitle: "Обратная связь", fbHint: "Баг, идея, чего не хватает. Пара слов:",
       fbSend: "Отправить", fbDone: "Спасибо! Улетело.",
       empty: "Ничего не найдено: измените запрос или фильтр",
@@ -947,7 +948,7 @@
       dClimb: "Climb · since wipe", dClimb24: "Climb · last 24h · top 100",
       dFall: "Record fall", dFallStar: "Fall · notable players",
       dKept: "Starting top-10 still in top-10",
-      epi: "On July 31, 2026, Valve reset the rating of the world's strongest players. Sixteen thousand MMR became nine and a half. In the days and weeks that followed, five thousand players across Europe began the climb again. This site watches every one of them.",
+      epi: "On July 31 sixteen thousand MMR became nine and a half. Five thousand players across Europe began the climb again.",
       fbTitle: "Feedback", fbHint: "Bug, idea, missing feature. A few words:",
       fbSend: "Send", fbDone: "Thanks! Sent.",
       empty: "Nothing found: change the query or filter",
@@ -1477,17 +1478,6 @@
   document.body.classList.add("acc-ready");
   if (accMq.addEventListener) accMq.addEventListener("change", accSync);
 
-  /* эпиграф на телефоне свёрнут до двух строк, тап разворачивает */
-  (function () {
-    var ep = document.querySelector(".hero-epigraph");
-    if (!ep) return;
-    ep.setAttribute("tabindex", "0");
-    var toggle = function () { if (isPhone()) ep.classList.toggle("open"); };
-    ep.addEventListener("click", toggle);
-    ep.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
-    });
-  })();
 
   /* обратная связь: попап → событие в аналитику */
   (function () {

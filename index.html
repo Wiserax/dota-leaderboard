@@ -63,6 +63,8 @@
     --body: "Inter", "Segoe UI", Tahoma, sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { overflow-x: clip; }
   .sr-only {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -168,7 +170,7 @@
   header.page { padding: 32px 0 0; position: relative; }
   header.page::before {
     content: ""; position: absolute; top: -56px; left: -120px;
-    width: 560px; height: 260px; pointer-events: none;
+    width: min(560px, 100vw); height: 260px; pointer-events: none;
     background: radial-gradient(closest-side, rgba(200, 64, 47, .13), transparent);
   }
   .h1-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -318,8 +320,8 @@
   .tip-pop.show { opacity: 1; transform: none; pointer-events: auto; }
   .flag { width: 16px; height: 12px; margin-right: 8px; vertical-align: -1px; border-radius: 2px; }
   .noflag { display: inline-block; width: 16px; margin-right: 8px; }
-  .name { color: var(--ink); font-weight: 500; }
-  .team { color: var(--steel); font-size: 12px; margin-left: 8px; }
+  .name { color: var(--ink); font-weight: 500; overflow-wrap: anywhere; }
+  .team { color: var(--steel); font-size: 12px; margin-left: 8px; overflow-wrap: anywhere; }
   .empty-row td { padding: 32px 16px; text-align: center; color: var(--dim); }
   .reset-btn {
     margin-left: 12px; background: var(--panel); border: 1px solid var(--line);
@@ -386,6 +388,7 @@
 
   /* ── narrow screens ─────────────────────────────────── */
   @media (max-width: 640px) {
+    .search { font-size: 16px; } /* < 16px triggers iOS Safari zoom-on-focus */
     .stats { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
     .kpi { padding: 10px 12px; }
     .kpi-value { font-size: 22px; }
@@ -394,7 +397,11 @@
   }
   @media (max-width: 460px) {
     .wrap { padding: 0 12px; }
-    .logo { letter-spacing: .14em; font-size: 18px; }
+    .logo {
+      letter-spacing: .1em; font-size: 16px;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lang { flex-shrink: 0; }
     header.page { padding-top: 24px; }
     thead th, tbody td { padding-left: 10px; padding-right: 10px; }
     .col-rank { width: 48px; }

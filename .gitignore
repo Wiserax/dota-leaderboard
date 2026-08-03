@@ -1,3 +1,6 @@
 variant-*.html
 artifact-build.html
 cur_aug2_tmp.json
+tools/ga-key.json
+tools/ga-token.json
+tools/ga_oauth.py
